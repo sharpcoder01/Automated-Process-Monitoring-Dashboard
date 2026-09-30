@@ -1,0 +1,70 @@
+# Dependency directories
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Testing
+coverage
+*.test.ts
+src/tests
+jest.config.js
+jest.*.config.js
+
+# Environment files
+.env
+.env.test
+.env.development
+.env.production
+
+# Development and CI files
+docker-compose.*.yml
+.github
+.husky
+.vscode
+
+# Temporary and log files
+*.log
+.tmp
+.DS_Store
+
+# Build output
+dist/
+build/
+
+# Logs
+logs/
+*.log
+
+# Docker files
+docker-compose.override.yml
+docker-compose.debug.yml
+docker-compose.test.yml
+docker-compose.dev.yml
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+
+# OS generated files
+Thumbs.db
+
+# Coverage directory used by testing tools
+coverage/
+
+# Temporary files
+tmp/
+temp/
+
+# Git files
+.git/
+.gitignore
+
+# Exclude test files
+src/tests/
+
+# Docs
+docs/
+
+# README file
+README.md
