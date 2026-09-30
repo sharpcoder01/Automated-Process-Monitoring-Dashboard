@@ -1,8 +1,8 @@
-# [Under Development] PulseFlow - Real-Time Social Media Analytics Platform
+#  Automated-Process-Monitoring-Dashboard
 
 ## Overview
 
-PulseFlow is a backend platform designed for real-time data processing and visualization, leveraging enterprise-grade technologies. This project showcases advanced capabilities in data simulation, monitoring, and analytics, all built on modern DevOps practices
+APMD is a backend platform designed for real-time data processing and visualization, leveraging enterprise-grade technologies. This project showcases advanced capabilities in data simulation, monitoring, and analytics, all built on modern DevOps practices
 
 ## Features
 - Real-time social media data processing
