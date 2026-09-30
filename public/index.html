@@ -29,10 +29,11 @@
           <p class="eyebrow">OPERATIONS <span>/</span> SOCIAL STREAM</p>
           <h1>Integration monitor</h1>
           <p class="heading-copy">A live view of incoming posts, engagement, and pipeline health.</p>
+          <p class="demo-notice" id="demo-notice" hidden>Free demo mode uses synthetic, in-memory data that resets when the service restarts.</p>
         </div>
         <div class="health-summary" aria-live="polite">
           <div class="health-item"><span class="health-light" id="api-light"></span><span>API</span><strong id="api-state">Checking</strong></div>
-          <div class="health-item"><span class="health-light" id="db-light"></span><span>MongoDB</span><strong id="db-state">Checking</strong></div>
+          <div class="health-item"><span class="health-light" id="db-light"></span><span id="database-label">MongoDB</span><strong id="db-state">Checking</strong></div>
         </div>
       </section>
 

@@ -33,6 +33,7 @@ app.use(errorHandler);
 
 // Start server
 const PORT = process.env.PORT || 3000;
+const demoMode = process.env.DEMO_MODE === "true";
 let server: any;
 let metricsInterval: NodeJS.Timeout;
 let restartAttempts = 0;
@@ -40,27 +41,32 @@ const MAX_RESTART_ATTEMPTS = 3;
 
 async function startServer() {
   try {
-    // Connect to MongoDB
-    await connectDB();
-    console.log("MongoDB Connected...");
+    if (demoMode) {
+      console.log("Demo mode enabled; using in-memory sample data.");
+    } else {
+      await connectDB();
+      console.log("MongoDB Connected...");
 
-    // Add RabbitMQ connection with retry
-    const messageQueue = new MessageQueue(process.env.RABBITMQ_URL!);
-    let retries = 0;
-    const MAX_RETRIES = 5;
+      const messageQueue = new MessageQueue(process.env.RABBITMQ_URL!);
+      let retries = 0;
+      const MAX_RETRIES = 5;
 
-    while (retries < MAX_RETRIES) {
-      try {
-        await messageQueue.connect();
-        console.log("RabbitMQ Connected...");
-        break;
-      } catch (error) {
-        retries++;
-        console.error(`RabbitMQ connection attempt ${retries} failed:`, error);
-        if (retries === MAX_RETRIES) {
-          throw new Error("Failed to connect to RabbitMQ after max retries");
+      while (retries < MAX_RETRIES) {
+        try {
+          await messageQueue.connect();
+          console.log("RabbitMQ Connected...");
+          break;
+        } catch (error) {
+          retries++;
+          console.error(
+            `RabbitMQ connection attempt ${retries} failed:`,
+            error,
+          );
+          if (retries === MAX_RETRIES) {
+            throw new Error("Failed to connect to RabbitMQ after max retries");
+          }
+          await new Promise((resolve) => setTimeout(resolve, 5000));
         }
-        await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait 5s between retries
       }
     }
 
@@ -69,17 +75,18 @@ async function startServer() {
       console.log(`Server running on port ${PORT}`);
     });
 
-    // Start metrics collection
-    metricsInterval = setInterval(
-      async () => {
-        try {
-          await pushMetrics();
-        } catch (error) {
-          console.error("Metrics push failed:", error);
-        }
-      },
-      parseInt(process.env.METRICS_PUSH_INTERVAL || "15000"),
-    );
+    if (!demoMode) {
+      metricsInterval = setInterval(
+        async () => {
+          try {
+            await pushMetrics();
+          } catch (error) {
+            console.error("Metrics push failed:", error);
+          }
+        },
+        parseInt(process.env.METRICS_PUSH_INTERVAL || "15000"),
+      );
+    }
 
     // Enhanced graceful shutdown
     const shutdown = async (signal: string) => {
@@ -89,7 +96,7 @@ async function startServer() {
       app.disable("accept-connections");
 
       // Clear metrics interval
-      clearInterval(metricsInterval);
+      if (metricsInterval) clearInterval(metricsInterval);
 
       try {
         // Wait for existing requests to complete (max 5 seconds)
@@ -106,8 +113,7 @@ async function startServer() {
           });
         });
 
-        // Disconnect from MongoDB
-        await mongoose.disconnect();
+        if (!demoMode) await mongoose.disconnect();
 
         console.log("Graceful shutdown completed");
         process.exit(0);
@@ -121,8 +127,7 @@ async function startServer() {
     process.once("SIGTERM", () => shutdown("SIGTERM"));
     process.once("SIGINT", () => shutdown("SIGINT"));
 
-    // Start metrics scheduler
-    startMetricsScheduler();
+    if (!demoMode) startMetricsScheduler();
 
     // Add restart monitoring
     server.on("error", async (error: Error) => {

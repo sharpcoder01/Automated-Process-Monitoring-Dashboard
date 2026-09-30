@@ -3,13 +3,21 @@ import mongoose from "mongoose";
 import { createTweetData } from "../factories/tweet.factory";
 import { TweetModel } from "../models/tweet";
 import { TweetService } from "../services/tweet.service";
+import {
+  createDemoProcess,
+  deleteDemoProcess,
+  getDemoProcesses,
+} from "../services/demo-store";
 
 const router = Router();
 
 router.post("/api/processes", async (_req, res) => {
   try {
-    const process = await new TweetService().createTweet(createTweetData());
-    res.status(201).json({ process });
+    const createdProcess =
+      process.env.DEMO_MODE === "true"
+        ? createDemoProcess()
+        : await new TweetService().createTweet(createTweetData());
+    res.status(201).json({ process: createdProcess });
   } catch (error) {
     console.error("Process creation failed:", error);
     res.status(500).json({ error: "Unable to add process" });
@@ -24,14 +32,24 @@ router.delete("/api/processes/:processId", async (req, res) => {
   }
 
   try {
-    const process =
+    if (process.env.DEMO_MODE === "true") {
+      const demoProcess = deleteDemoProcess(processId);
+      if (!demoProcess) {
+        res.status(404).json({ error: "Process not found" });
+        return;
+      }
+      res.json({ process: { id: demoProcess._id, user: demoProcess.user } });
+      return;
+    }
+
+    const storedProcess =
       await TweetModel.findByIdAndDelete(processId).select("_id user");
-    if (!process) {
+    if (!storedProcess) {
       res.status(404).json({ error: "Process not found" });
       return;
     }
 
-    res.json({ process: { id: process.id, user: process.user } });
+    res.json({ process: { id: storedProcess.id, user: storedProcess.user } });
   } catch (error) {
     console.error("Process removal failed:", error);
     res.status(500).json({ error: "Unable to remove process" });
@@ -40,6 +58,61 @@ router.delete("/api/processes/:processId", async (req, res) => {
 
 router.get("/api/dashboard", async (_req, res) => {
   try {
+    if (process.env.DEMO_MODE === "true") {
+      const demoProcesses = getDemoProcesses();
+      const totals = demoProcesses.reduce(
+        (summary, tweet) => ({
+          tweets: summary.tweets + 1,
+          likes: summary.likes + tweet.metrics.likes,
+          retweets: summary.retweets + tweet.metrics.retweets,
+          comments: summary.comments + tweet.metrics.comments,
+        }),
+        { tweets: 0, likes: 0, retweets: 0, comments: 0 },
+      );
+      const sentiment = ["negative", "neutral", "positive"].map((name) => ({
+        name,
+        count: demoProcesses.filter((tweet) => tweet.sentiment === name).length,
+      }));
+      const platforms = ["web", "android", "ios"]
+        .map((name) => ({
+          name,
+          count: demoProcesses.filter((tweet) => tweet.platform === name)
+            .length,
+        }))
+        .sort((left, right) => right.count - left.count);
+      const activity = Array.from({ length: 7 }, (_, index) => {
+        const date = new Date();
+        date.setUTCHours(0, 0, 0, 0);
+        date.setUTCDate(date.getUTCDate() - (6 - index));
+        const start = date.getTime();
+        const end = start + 24 * 60 * 60 * 1000;
+        return {
+          date: date.toISOString().slice(0, 10),
+          count: demoProcesses.filter((tweet) => {
+            const timestamp = new Date(tweet.timestamp).getTime();
+            return timestamp >= start && timestamp < end;
+          }).length,
+        };
+      });
+      const totalEngagement = totals.likes + totals.retweets + totals.comments;
+
+      res.json({
+        generatedAt: new Date().toISOString(),
+        summary: {
+          ...totals,
+          totalEngagement,
+          averageEngagementPerPost: totals.tweets
+            ? totalEngagement / totals.tweets
+            : 0,
+        },
+        sentiment,
+        platforms,
+        activity,
+        recentTweets: demoProcesses.slice(0, 100),
+      });
+      return;
+    }
+
     const activityStart = new Date();
     activityStart.setUTCHours(0, 0, 0, 0);
     activityStart.setUTCDate(activityStart.getUTCDate() - 6);

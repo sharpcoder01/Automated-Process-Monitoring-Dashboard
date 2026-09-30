@@ -219,7 +219,10 @@ async function loadDashboard() {
     renderPlatforms(dashboard.platforms || [], total);
     renderTweets(dashboard.recentTweets || []);
     setHealth('api', true, 'Online');
-    setHealth('db', health.dbStatus === 'connected', health.dbStatus === 'connected' ? 'Connected' : 'Unavailable');
+    const demoMode = Boolean(health.demoMode);
+    document.getElementById('database-label').textContent = demoMode ? 'Demo store' : 'MongoDB';
+    document.getElementById('demo-notice').hidden = !demoMode;
+    setHealth('db', demoMode || health.dbStatus === 'connected', demoMode ? 'Demo data' : health.dbStatus === 'connected' ? 'Connected' : 'Unavailable');
     document.getElementById('last-updated').textContent = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' }).format(new Date(dashboard.generatedAt));
   } catch (error) {
     setHealth('api', false, 'Unavailable');

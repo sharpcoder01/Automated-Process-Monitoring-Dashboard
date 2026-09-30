@@ -7,26 +7,12 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: MONGODB_URI
-        sync: false
-      - key: GRAFANA_PROMETHEUS_URL
-        sync: false
-      - key: GRAFANA_PUSH_URL
-        sync: false
-      - key: GRAFANA_USERNAME
-        sync: false
-      - key: GRAFANA_API_KEY
-        sync: false
-      - key: RABBITMQ_URL
-        sync: false
-      - key: RABBITMQ_PASSWORD
-        sync: false
-      - key: METRICS_PUSH_INTERVAL
-        value: "60000"
+      - key: DEMO_MODE
+        value: "true"
     healthCheckPath: /healthz
     autoDeploy: true
     numInstances: 1
-    plan: starter
+    plan: free
     buildFilter:
       paths:
         - src/**/*.ts
@@ -35,13 +21,3 @@ services:
         - package-lock.json
         - tsconfig.json
         - render.yaml
-  - type: worker
-    name: pulse-flow-heartbeat
-    env: node
-    buildCommand: npm ci && npm run build
-    startCommand: node dist/scripts/heartbeat.js
-    envVars:
-      - key: APP_URL
-        value: https://pulse-flow.onrender.com
-      - key: HEARTBEAT_INTERVAL
-        value: 300000  # Reduced to 5 minutes
