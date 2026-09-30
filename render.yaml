@@ -17,8 +17,6 @@ services:
         sync: false
       - key: GRAFANA_API_KEY
         sync: false
-      - key: PORT
-        value: 3000
       - key: RABBITMQ_URL
         sync: false
       - key: RABBITMQ_PASSWORD
@@ -41,9 +39,11 @@ services:
     buildFilter:
       paths:
         - src/**/*.ts
+        - public/**
         - package.json
         - package-lock.json
         - tsconfig.json
+        - render.yaml
   - type: worker
     name: pulse-flow-heartbeat
     env: node

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#183b31" />
+    <title>PulseFlow | Integration Monitor</title>
+    <link rel="stylesheet" href="/dashboard.css" />
+    <script src="/dashboard.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="PulseFlow dashboard">
+        <span class="brand-mark" aria-hidden="true">P</span>
+        <span>pulse<span class="brand-light">flow</span></span>
+      </a>
+      <div class="topbar-right">
+        <span class="environment-label"><span class="live-dot"></span>LOCAL ENVIRONMENT</span>
+        <button class="add-process-button" id="add-process-button" type="button"><span aria-hidden="true">+</span> Add process</button>
+        <button class="refresh-button" id="refresh-button" type="button">
+          <span aria-hidden="true">&#8635;</span> Refresh data
+        </button>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <section class="page-heading">
+        <div>
+          <p class="eyebrow">OPERATIONS <span>/</span> SOCIAL STREAM</p>
+          <h1>Integration monitor</h1>
+          <p class="heading-copy">A live view of incoming posts, engagement, and pipeline health.</p>
+        </div>
+        <div class="health-summary" aria-live="polite">
+          <div class="health-item"><span class="health-light" id="api-light"></span><span>API</span><strong id="api-state">Checking</strong></div>
+          <div class="health-item"><span class="health-light" id="db-light"></span><span>MongoDB</span><strong id="db-state">Checking</strong></div>
+        </div>
+      </section>
+
+      <div class="process-status" id="process-status" role="status" aria-live="polite" hidden></div>
+
+      <div class="error-banner" id="error-banner" role="alert" hidden></div>
+
+      <section class="metric-grid" aria-label="Key metrics">
+        <article class="metric-card metric-card-green">
+          <div class="metric-heading"><span>POSTS COLLECTED</span><span class="metric-index">01</span></div>
+          <strong class="metric-value" id="tweet-total">--</strong>
+          <span class="metric-detail">All-time ingested posts</span>
+        </article>
+        <article class="metric-card metric-card-cyan">
+          <div class="metric-heading"><span>TOTAL ENGAGEMENT</span><span class="metric-index">02</span></div>
+          <strong class="metric-value" id="engagement-total">--</strong>
+          <span class="metric-detail">Likes, reposts, and comments</span>
+        </article>
+        <article class="metric-card metric-card-amber">
+          <div class="metric-heading"><span>AVG. INTERACTIONS / POST</span><span class="metric-index">03</span></div>
+          <strong class="metric-value" id="average-rate">--</strong>
+          <span class="metric-detail">Likes, reposts, and comments</span>
+        </article>
+        <article class="metric-card metric-card-coral">
+          <div class="metric-heading"><span>POSITIVE SENTIMENT</span><span class="metric-index">04</span></div>
+          <strong class="metric-value" id="positive-rate">--</strong>
+          <span class="metric-detail" id="positive-detail">Share of analyzed posts</span>
+        </article>
+      </section>
+
+      <section class="primary-grid" aria-label="Engagement analytics">
+        <article class="panel activity-panel">
+          <div class="panel-heading">
+            <div><p class="panel-kicker">VOLUME</p><h2>Post activity</h2></div>
+            <span class="period-label">LAST 7 DAYS</span>
+          </div>
+          <div class="chart-wrap">
+            <svg id="activity-chart" viewBox="0 0 760 230" role="img" aria-label="Posts collected per day over the last seven days"></svg>
+          </div>
+          <div class="chart-foot"><span><i class="legend-line"></i>Posts received</span><span id="activity-total">0 posts this week</span></div>
+        </article>
+
+        <article class="panel sentiment-panel">
+          <div class="panel-heading">
+            <div><p class="panel-kicker">AUDIENCE SIGNAL</p><h2>Sentiment mix</h2></div>
+            <span class="panel-note">ALL POSTS</span>
+          </div>
+          <div class="sentiment-body">
+            <div class="sentiment-ring" id="sentiment-ring" role="img" aria-label="Sentiment distribution">
+              <div class="ring-center"><strong id="sentiment-total">0</strong><span>posts</span></div>
+            </div>
+            <div class="sentiment-legend" id="sentiment-legend"></div>
+          </div>
+          <div class="panel-divider"></div>
+          <div class="platform-heading"><h3>By platform</h3><span>POST SOURCE</span></div>
+          <div class="platform-list" id="platform-list"></div>
+        </article>
+      </section>
+
+      <section class="panel recent-panel">
+        <div class="panel-heading recent-heading">
+          <div><p class="panel-kicker">INGESTION FEED</p><h2>Recent posts</h2></div>
+          <span class="panel-note" id="feed-count">LATEST 100</span>
+        </div>
+        <div class="feed-toolbar" role="search" aria-label="Filter recent posts">
+          <label class="feed-control feed-search"><span>Search posts</span><input id="feed-search" type="search" placeholder="Search account or post text" autocomplete="off" /></label>
+          <label class="feed-control"><span>Platform</span><select id="platform-filter"><option value="all">All platforms</option><option value="web">Web</option><option value="android">Android</option><option value="ios">iOS</option></select></label>
+          <label class="feed-control"><span>Sentiment</span><select id="sentiment-filter"><option value="all">All sentiment</option><option value="positive">Positive</option><option value="neutral">Neutral</option><option value="negative">Negative</option></select></label>
+          <label class="feed-control"><span>Sort by</span><select id="feed-sort"><option value="newest">Newest first</option><option value="engagement">Most engagement</option></select></label>
+          <div class="feed-actions"><button class="clear-filters-button" id="clear-filters" type="button">Clear</button><button class="export-button" id="export-csv" type="button"><span aria-hidden="true">&#8595;</span> Export CSV</button></div>
+        </div>
+        <div class="feed-summary"><span id="feed-results" aria-live="polite">Loading recent posts...</span><span>Latest 100 records</span></div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>POST</th><th>PLATFORM</th><th>SENTIMENT</th><th>ENGAGEMENT</th><th>RECEIVED</th><th>ACTION</th></tr></thead>
+            <tbody id="recent-rows"><tr><td class="empty-state" colspan="6">Loading post activity...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="feed-pagination">
+          <span id="feed-page-label">Page 1 of 1</span>
+          <div><button id="feed-previous" type="button" aria-label="Previous page" disabled>&#8592;</button><button id="feed-next" type="button" aria-label="Next page" disabled>&#8594;</button></div>
+        </div>
+      </section>
+
+      <footer class="page-footer"><span>PulseFlow Integration Monitor</span><span>Updated <time id="last-updated">--</time></span><a href="/metrics" target="_blank" rel="noreferrer">Prometheus metrics</a></footer>
+    </main>
+  </body>
+</html>
